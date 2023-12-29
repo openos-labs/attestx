@@ -1,0 +1,3 @@
+pub const TOPIC_SCHEMA: &str = "d0b86852e21f9e5fa4bc3b0cff9757ffe243d50c4b43968a42202153d651ea5e";
+pub const TOPIC_ATTESTATION: &str =
+    "0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35";
