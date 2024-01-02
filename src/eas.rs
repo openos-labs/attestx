@@ -17,11 +17,23 @@ pub type MyWallet = ethers::signers::Wallet<ethers::core::k256::ecdsa::SigningKe
 abigen!(EASContract, "contracts/abi/EAS.json",);
 abigen!(SchemaRegistry, "contracts/abi/SchemaRegistry.json",);
 
+#[derive(Debug)]
 pub struct EAS {
     pub chain_id: u64,
     pub eas_contract: Address,
     pub registry_contract: Address,
     pub client: Arc<SignerMiddleware<Provider<Http>, MyWallet>>,
+}
+
+impl Clone for EAS {
+    fn clone(&self) -> Self {
+        Self {
+            chain_id: self.chain_id,
+            eas_contract: self.eas_contract,
+            registry_contract: self.registry_contract,
+            client: self.client.clone(),
+        }
+    }
 }
 
 impl EAS {
@@ -44,17 +56,17 @@ impl EAS {
         })
     }
 
-    pub fn with_eas_contract(mut self, eas_contract: String) -> Result<Self> {
+    pub fn with_eas_contract(&mut self, eas_contract: String) -> Result<&mut Self> {
         self.eas_contract = eas_contract.parse::<Address>()?;
         Ok(self)
     }
 
-    pub fn with_registry_contract(mut self, registry_contract: String) -> Result<Self> {
+    pub fn with_registry_contract(&mut self, registry_contract: String) -> Result<&mut Self> {
         self.registry_contract = registry_contract.parse::<Address>()?;
         Ok(self)
     }
 
-    pub fn with_wallet(mut self, private_key: String) -> Result<Self> {
+    pub fn with_wallet(&mut self, private_key: String) -> Result<&mut Self> {
         let wallet: MyWallet = private_key.parse()?;
         self.client = Arc::new(self.client.with_signer(wallet.with_chain_id(self.chain_id)));
         Ok(self)

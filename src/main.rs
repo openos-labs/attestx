@@ -14,7 +14,7 @@ async fn main() -> Result<()> {
     let url = "https://data-seed-prebsc-1-s1.bnbchain.org:8545".to_string();
 
     let private_key = "".to_string();
-    let eas = EAS::new(url, private_key).await?;
+    let mut eas = EAS::new(url, private_key).await?;
 
     let registry_address = "0x08C8b8417313fF130526862f90cd822B55002D72".to_string();
     let eas_address = "0x6c2270298b1e6046898a322acB3Cbad6F99f7CBD".to_string();
