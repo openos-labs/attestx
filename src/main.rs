@@ -10,11 +10,14 @@ use models::{Token, U256};
 use eyre::Result;
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> Result<(), anyhow::Error> {
     let url = "https://data-seed-prebsc-1-s1.bnbchain.org:8545".to_string();
 
     let private_key = "".to_string();
-    let mut eas = EAS::new(url, private_key).await?;
+    let mut eas = EAS::new(url, private_key)
+        .await
+        .map_err(|e| eyre::eyre!(e))
+        .unwrap();
 
     let registry_address = "0x08C8b8417313fF130526862f90cd822B55002D72".to_string();
     let eas_address = "0x6c2270298b1e6046898a322acB3Cbad6F99f7CBD".to_string();
@@ -30,8 +33,12 @@ async fn main() -> Result<()> {
     println!("eas_address: {}\n", eas_address);
 
     let eas = eas
-        .with_registry_contract(registry_address.clone())?
-        .with_eas_contract(eas_address)?;
+        .with_registry_contract(registry_address.clone())
+        .map_err(|e| eyre::eyre!(e))
+        .unwrap()
+        .with_eas_contract(eas_address)
+        .map_err(|e| eyre::eyre!(e))
+        .unwrap();
 
     let schema = "uint64 twitterId, string name, uint64 followers, uint64 posts".to_string();
     let revocable = true;
@@ -39,7 +46,9 @@ async fn main() -> Result<()> {
     // create schema
     let schema_id = eas
         .new_schema(schema.clone(), resolver_address, revocable)
-        .await?;
+        .await
+        .map_err(|e| eyre::eyre!(e))
+        .unwrap();
 
     //let schema_id =
     // "0xa1d3c7a85714564a3817eaafd31d14714d1c4144bc528c3d1b0aa46984939c82".to_string();
@@ -57,7 +66,7 @@ async fn main() -> Result<()> {
     params.push(Token::Uint(U256::from(1888)));
     params.push(Token::Uint(U256::from(10)));
 
-    let data = encode_data(params)?;
+    let data = encode_data(params).map_err(|e| eyre::eyre!(e)).unwrap();
 
     let att_id = eas
         .new_attestation(

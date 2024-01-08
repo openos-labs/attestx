@@ -176,13 +176,13 @@ impl EAS {
         revocable: bool,
         ref_uid: Option<String>,
         data: String,
-    ) -> Result<String> {
+    ) -> Result<String, anyhow::Error> {
         let eas_contract = EASContract::new(self.eas_contract, self.client.clone());
 
-        let schema = decode_id(schema_id)?;
+        let schema = decode_id(schema_id).map_err(|e| eyre::eyre!(e)).unwrap();
 
         let ref_uid = match ref_uid {
-            Some(ref_uid) => decode_id(ref_uid)?,
+            Some(ref_uid) => decode_id(ref_uid).map_err(|e| eyre::eyre!(e)).unwrap(),
             None => [0; 32],
         };
 
@@ -192,7 +192,10 @@ impl EAS {
             revocable: revocable,
             ref_uid: ref_uid,
             value: U256::zero(),
-            data: from_hex(data.as_str())?.into(),
+            data: from_hex(data.as_str())
+                .map_err(|e| eyre::eyre!(e))
+                .unwrap()
+                .into(),
         };
 
         let request = AttestationRequest {
@@ -200,9 +203,9 @@ impl EAS {
             data: req_data,
         };
 
+        // let receipt: = eas_contract.attest(request).send().await;
         let receipt: Option<TransactionReceipt> =
             eas_contract.attest(request).send().await?.await?;
-
         match receipt {
             Some(receipt) => {
                 let logs = receipt.logs;
@@ -213,12 +216,15 @@ impl EAS {
                     {
                         let uid = format!("0x{}", hex::encode(log.data.clone()));
                         return Ok(uid);
+                    } else {
+                        return Err(anyhow::Error::msg("topic length < 2 || to_hex(topics[0].as_bytes()) != consts::TOPIC_ATTESTATION"));
                     }
+                } else {
+                    return Err(anyhow::Error::msg("logs length <= 0"));
                 }
             }
-            None => {}
+            None => return Err(anyhow::Error::msg("receipt is none")),
         }
-        Err(eyre::format_err!("error to attest"))
     }
 }
 
